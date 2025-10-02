@@ -1,12 +1,14 @@
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # .../backend
+BASE_DIR = Path(__file__).resolve().parent.parent.parent 
 
 # --- Core ---
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-change-me")
-DEBUG = False  # override in local.py
+DEBUG = False  
 ALLOWED_HOSTS: list[str] = []
+
+AUTH_USER_MODEL = "accounts.User"
 
 # --- Apps ---
 INSTALLED_APPS = [
@@ -27,12 +29,14 @@ INSTALLED_APPS = [
     "orders",
     "payments",
     "customers",
+    "accounts",
 ]
 
 # --- Middleware ---
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # must be high
+    "corsheaders.middleware.CorsMiddleware", 
     "django.middleware.security.SecurityMiddleware",
+    "accounts.middleware.CurrentTenantMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
