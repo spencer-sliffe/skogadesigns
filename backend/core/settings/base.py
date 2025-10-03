@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     # 3rd party
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 
     # local apps
     "catalog",
@@ -101,15 +103,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
 
-# --- DRF basics ---
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
-    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SkogaDesigns API",
+    "DESCRIPTION": "Backend for Skoga multi-tenant platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": r"/api",
 }
 
 # --- Email (sane defaults; override in .env) ---
