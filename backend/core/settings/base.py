@@ -1,11 +1,13 @@
+# core/settings/base.py
 import os
 from pathlib import Path
+from datetime import timedelta
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # --- Core ---
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-change-me")
-DEBUG = False  
+DEBUG = False
 ALLOWED_HOSTS: list[str] = []
 
 AUTH_USER_MODEL = "accounts.User"
@@ -24,6 +26,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "rest_framework_simplejwt.token_blacklist",   # JWT blacklist/rotation
 
     # local apps
     "catalog",
@@ -32,11 +35,12 @@ INSTALLED_APPS = [
     "payments",
     "customers",
     "accounts",
+    "api",                                        # <-- global router lives here
 ]
 
 # --- Middleware ---
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware", 
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "accounts.middleware.CurrentTenantMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -100,9 +104,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- CORS/CSRF (override lists in env/local/prod) ---
-CORS_ALLOWED_ORIGINS = [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
-CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
+CORS_ALLOWED_ORIGINS = [o for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o]
+CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+CORS_ALLOW_CREDENTIALS = True  # FE will send cookies/Authorization when needed
 
+# --- DRF / Auth ---
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_RENDERER_CLASSES": [
@@ -110,21 +116,39 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # Bearer JWT
+        "rest_framework.authentication.SessionAuthentication",        # keep admin/session
         "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
+# SimpleJWT config (sensible defaults; adjust in env-specific files if needed)
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+# --- OpenAPI / Swagger ---
 SPECTACULAR_SETTINGS = {
     "TITLE": "SkogaDesigns API",
     "DESCRIPTION": "Backend for Skoga multi-tenant platform",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api",
+    # allow public access to /api/docs and /api/redoc even if API requires auth
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    # add bearer auth so Swagger Authorize button uses JWT
+    "SECURITY": [{"bearerAuth": []}],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+        }
+    },
 }
-
-# --- Email (sane defaults; override in .env) ---
+# --- Email ---
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
