@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========== CSS VARIABLES ========== */
+:root {
+  --font-geist-sans: 'Geist', system-ui, sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
+
+  --background: 255 255 255;       /* white */
+  --foreground: 20 20 20;          /* dark gray */
+  --muted: 240 240 240;            /* light gray */
+  --border: 230 230 230;           /* border gray */
+
+  --primary: 0 0 0;                /* black */
+  --primary-foreground: 255 255 255; /* white */
+  --secondary: 255 255 255;        /* white */
+  --secondary-foreground: 0 0 0;   /* black */
+
+  --accent: 236 72 153;            /* rose-500 */
+  --accent-foreground: 255 255 255;
+
+  color-scheme: light;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 15 15 15;
+    --foreground: 245 245 245;
+    --muted: 40 40 40;
+    --border: 55 55 55;
+    --primary: 245 245 245;
+    --primary-foreground: 15 15 15;
+    --secondary: 25 25 25;
+    --secondary-foreground: 255 255 255;
+  }
+}
+
+/* ========== GLOBAL ELEMENT STYLES ========== */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family: var(--font-geist-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Basic link styling */
+a {
+  color: rgb(var(--accent));
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: rgb(219 39 119); /* rose-600 */
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Utility helpers for global layout */
+.container {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors;
+}
+
+.input {
+  @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800;
+}
+
+.card {
+  @apply bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm;
+}
