@@ -1,34 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "@styles/globals.css"; 
-import ClientApiInit from "@api/client/client-api-init"; 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "@styles/globals.css";
+import ClientApiInit from "@components/client-api-init";
 
 export const metadata: Metadata = {
   title: "Skoga — Jewelry",
   description: "A modern jewelry marketplace.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Initialize OpenAPI client once on the browser */}
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}  // ← exposes --font-geist-*
+    >
+      <body className="antialiased">
         <ClientApiInit />
         {children}
       </body>

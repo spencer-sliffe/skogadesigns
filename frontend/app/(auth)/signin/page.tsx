@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthService } from "@/api/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,23 +10,44 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function SignInPage() {
-  const r = useRouter();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/dashboard"; // default after login
+
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // If already "signed in", bounce to next/dashboard
+  React.useEffect(() => {
+    const hasSessionCookie = typeof document !== "undefined" && document.cookie.includes("skoga_session=1");
+    const hasAccess = typeof window !== "undefined" && !!localStorage.getItem("access");
+    if (hasSessionCookie && hasAccess) router.replace(next);
+  }, [router, next]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      // signin returns { access, refresh, user } per your backend; codegen typed it as `any`
       const res = await AuthService.authSignin({ email, password });
       const access = (res as any)?.access;
       if (!access) throw new Error("No access token in response");
+
+      // Store token for OpenAPI client
       localStorage.setItem("access", access);
-      r.replace("/");
+
+      // Lightweight session cookie for middleware (non-HttpOnly)
+      document.cookie = [
+        "skoga_session=1",
+        "Path=/",
+        "Max-Age=1209600", // 14 days
+        "SameSite=Lax"
+        // "Secure" // enable in HTTPS
+      ].join("; ");
+
+      router.replace(next);
     } catch (err: any) {
       setError(err?.message ?? "Sign in failed");
     } finally {
@@ -46,14 +67,28 @@ export default function SignInPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" placeholder="you@example.com"
-                     value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••"
-                     value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
