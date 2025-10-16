@@ -26,6 +26,7 @@ npm install
 cd ..
 
 cp backend/.env.example backend/.env
+python manage.py migrate
 ```
 
 ---
