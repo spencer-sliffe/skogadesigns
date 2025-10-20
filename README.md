@@ -89,3 +89,50 @@ npm run dev
 npm run build
 npm start
 ```
+
+---
+
+## Pull Request Workflow
+
+All changes must be proposed through a feature branch and reviewed via pull request before merging into `main`.
+
+### Branch Naming Convention
+```
+<project-code>/<short-description>
+
+Example:
+sd-008/add-field-permissions
+```
+
+### Pull Request Template
+```
+### Summary
+Briefly describe what the PR does.
+
+### Details
+- What was added or changed
+- Why it was necessary
+- Any migration or setup notes
+
+### Testing
+Steps to verify the changes locally.
+```
+
+### Steps
+```bash
+# Create and switch to feature branch
+git checkout -b sd-008/add-field-permissions
+
+# Stage and commit changes
+git add -A
+git commit -m "SD-008: add read and write field permissions"
+
+# Push to origin
+git push origin sd-008/add-field-permissions
+
+# Open PR on GitHub
+# Title example:
+# SD-008: Add read and write field permissions
+```
+
+All pull requests must pass tests and be reviewed before merge.
