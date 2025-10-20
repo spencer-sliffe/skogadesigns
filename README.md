@@ -106,15 +106,15 @@ sd-008/add-field-permissions
 
 ### Pull Request Template
 ```
-Summary
+### Summary
 Briefly describe what the PR does.
 
-Details
+### Details
 - What was added or changed
 - Why it was necessary
 - Any migration or setup notes
 
-Testing
+### Testing
 Steps to verify the changes locally.
 ```
 
@@ -135,4 +135,4 @@ git push origin sd-008/add-field-permissions
 # SD-008: Add read and write field permissions
 ```
 
-All pull requests must pass tests and be reviewed before merge.
+All pull requests must pass automated tests before review.
