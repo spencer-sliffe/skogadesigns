@@ -21,11 +21,10 @@ class User(AbstractUser):
     """
     email = models.EmailField(_("email address"), unique=True)
 
-    # OPTIONAL profile fields
     display_name = models.CharField(max_length=150, blank=True, default="")
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]  # so createsuperuser still asks username
+    REQUIRED_FIELDS = ["username"]  
 
     def __str__(self) -> str:
         return self.email
@@ -37,8 +36,7 @@ class Tenant(models.Model):
     This supports future multi-store (multi-tenant) out of the box.
     """
     name = models.CharField(max_length=120)
-    slug = models.SlugField(unique=True)  # e.g., "skoga"
-    # Optional: map domain if you ever go multi-domain per tenant
+    slug = models.SlugField(unique=True)
     domain = models.CharField(max_length=255, blank=True, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
