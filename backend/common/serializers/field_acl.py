@@ -28,12 +28,15 @@ def _can_write(user, tenant, rule: WriteRule) -> bool:
         return has_role_at_least(user, tenant, rule)  # type: ignore
     return False
 
+
 class FieldACLSerializerMixin(serializers.Serializer):
     """
     Enforces per-field read/write ACL based on request.user and request.tenant.
-    Declare FIELD_ACL = { "field": {"read": RULE, "write": RULE}, ... }
+    Looks for rules in this order:
+      1) Serializer.FIELD_ACL
+      2) Model.FIELD_ACL (if serializer.Meta.model defines it)
+      3) Default: read=public, write=auth
     """
-    # Example default: readable by anyone, writable by STAFF+
     FIELD_ACL: Dict[str, Dict[str, Any]] = {}
 
     def _ctx(self):
@@ -42,32 +45,32 @@ class FieldACLSerializerMixin(serializers.Serializer):
         tenant = getattr(request, "tenant", None)
         return user, tenant
 
-    # Hide unreadable fields dynamically
+    def _acl_map(self) -> Dict[str, Dict[str, Any]]:
+        if getattr(self, "FIELD_ACL", None):
+            return self.FIELD_ACL
+        model = getattr(getattr(self, "Meta", None), "model", None)
+        if model and hasattr(model, "FIELD_ACL"):
+            return getattr(model, "FIELD_ACL")
+        return {}
+
     def get_fields(self):
         fields = super().get_fields()
         user, tenant = self._ctx()
-        acl = getattr(self, "FIELD_ACL", {}) or {}
-        # If no ACL for a field → default read=public, write=auth
+        acl = self._acl_map()
         for name in list(fields.keys()):
             rules = acl.get(name, {"read": "public", "write": "auth"})
             if not _can_read(user, tenant, rules.get("read", "public")):
                 fields.pop(name, None)
         return fields
 
-    # Block writes to non-writable fields
     def validate(self, attrs):
         user, tenant = self._ctx()
-        acl = getattr(self, "FIELD_ACL", {}) or {}
-        read_only_errors = []
-
-        # For updates, compare incoming attrs to instance; for create, any provided field is a write
-        for name, value in attrs.items():
+        acl = self._acl_map()
+        blocked = []
+        for name in attrs.keys():
             rules = acl.get(name, {"read": "public", "write": "auth"})
-            can_w = _can_write(user, tenant, rules.get("write", "auth"))
-            if not can_w:
-                read_only_errors.append(name)
-
-        if read_only_errors:
-            raise PermissionDenied(f"You are not allowed to write: {', '.join(read_only_errors)}")
-
+            if not _can_write(user, tenant, rules.get("write", "auth")):
+                blocked.append(name)
+        if blocked:
+            raise PermissionDenied(f"You are not allowed to write: {', '.join(blocked)}")
         return super().validate(attrs)
