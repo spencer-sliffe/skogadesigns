@@ -1,13 +1,14 @@
+# backend/catalog/views/variants.py
 from __future__ import annotations
-from .base import WriteGuard
-from common.viewsets import TenantScopedModelViewSet
+from .base import TenantScopedModelViewSet
 from ..models import Variant
 from ..serializers import VariantSerializer
+from ..permissions import CatalogWriteGuard
 
 class VariantViewSet(TenantScopedModelViewSet):
     queryset = Variant.objects.select_related("product", "product__tenant")
     serializer_class = VariantSerializer
-    permission_classes = [WriteGuard]
+    permission_classes = [CatalogWriteGuard]
     tenant_path = "product__tenant"
 
     def get_queryset(self):

@@ -1,13 +1,16 @@
+# backend/catalog/views/attributes.py
 from __future__ import annotations
-from .base import WriteGuard
-from common.viewsets import TenantScopedModelViewSet
+from .base import TenantScopedModelViewSet
 from ..models import Attribute, AttributeValue, ProductAttribute
-from ..serializers import AttributeSerializer, AttributeValueSerializer, ProductAttributeSerializer
+from ..serializers import (
+    AttributeSerializer, AttributeValueSerializer, ProductAttributeSerializer
+)
+from ..permissions import CatalogWriteGuard
 
 class AttributeViewSet(TenantScopedModelViewSet):
     queryset = Attribute.objects.select_related("tenant")
     serializer_class = AttributeSerializer
-    permission_classes = [WriteGuard]
+    permission_classes = [CatalogWriteGuard]
 
     def get_queryset(self):
         tenant = getattr(self.request, "tenant", None)
@@ -16,7 +19,7 @@ class AttributeViewSet(TenantScopedModelViewSet):
 class AttributeValueViewSet(TenantScopedModelViewSet):
     queryset = AttributeValue.objects.select_related("attribute", "attribute__tenant")
     serializer_class = AttributeValueSerializer
-    permission_classes = [WriteGuard]
+    permission_classes = [CatalogWriteGuard]
     tenant_path = "attribute__tenant"
 
     def get_queryset(self):
@@ -26,7 +29,7 @@ class AttributeValueViewSet(TenantScopedModelViewSet):
 class ProductAttributeViewSet(TenantScopedModelViewSet):
     queryset = ProductAttribute.objects.select_related("product", "product__tenant", "attribute", "value")
     serializer_class = ProductAttributeSerializer
-    permission_classes = [WriteGuard]
+    permission_classes = [CatalogWriteGuard]
     tenant_path = "product__tenant"
 
     def get_queryset(self):
