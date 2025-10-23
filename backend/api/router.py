@@ -1,3 +1,4 @@
+# backend/api/urls.py
 from rest_framework_nested import routers
 from accounts.views.auth import AuthViewSet
 from catalog.views import (
